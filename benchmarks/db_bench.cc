@@ -6,6 +6,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <time.h>
 #include <bits/stdc++.h>
 
 #include "leveldb/cache.h"
@@ -220,9 +221,10 @@ class Stats {
     if (FLAGS_histogram) {
       double now = g_env->NowMicros();
       double micros = now - last_op_finish_;
+      time_t curr_time = time(NULL);
       std::ofstream latencyFile;
-      latencyFile.open("latency.txt", std::ios::app);
-      latencyFile << micros << std::endl;
+      latencyFile.open("latency.csv", std::ios::app);
+      latencyFile << g_env->NowMicros() << "," << micros << std::endl;
       latencyFile.close();
       hist_.Add(micros);
       if (micros > 20000) {
