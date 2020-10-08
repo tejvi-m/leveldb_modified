@@ -9,7 +9,7 @@
 #define STORAGE_LEVELDB_UTIL_POSIX_LOGGER_H_
 
 #include <sys/time.h>
-
+#include <chrono>
 #include <cassert>
 #include <cstdarg>
 #include <cstdio>
@@ -20,6 +20,8 @@
 #include "leveldb/env.h"
 
 namespace leveldb {
+
+leveldb::Env* g_env = leveldb::Env::Default();
 
 class PosixLogger final : public Logger {
  public:
@@ -63,7 +65,8 @@ class PosixLogger final : public Logger {
 
       // Print the header into the buffer.
       int buffer_offset = std::snprintf(
-          buffer, buffer_size, "%04d/%02d/%02d-%02d:%02d:%02d.%06d %s ",
+          buffer, buffer_size, "%lu;%04d/%02d/%02d-%02d:%02d:%02d.%06d %s ", 
+          g_env->NowMicros(),
           now_components.tm_year + 1900, now_components.tm_mon + 1,
           now_components.tm_mday, now_components.tm_hour, now_components.tm_min,
           now_components.tm_sec, static_cast<int>(now_timeval.tv_usec),
