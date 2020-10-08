@@ -277,8 +277,9 @@ class Stats {
       double now = g_env->NowMicros();
       double micros = now - last_op_finish_;
       std::ofstream latencyFile;
-      latencyFile.open("/home/aish/level_database/Latency.txt", std::ios::app);
+      latencyFile.open("latency.txt", std::ios::app);
       latencyFile << micros << std::endl;
+      latencyFile.close();
       hist_.Add(micros);
       if (micros > 20000) {
         std::fprintf(stderr, "long op: %.1f micros%30s\r", micros, "");
