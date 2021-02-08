@@ -455,6 +455,8 @@ Status DBImpl::RecoverLogFile(uint64_t log_number, bool last_log,
     if (mem->ApproximateMemoryUsage() > options_.write_buffer_size) {
       compactions++;
       *save_manifest = true;
+            Log(options_.info_log, "Memtable has filled up. \n");
+
       status = WriteLevel0Table(mem, edit, nullptr);
       mem->Unref();
       mem = nullptr;
@@ -537,12 +539,15 @@ Status DBImpl::WriteLevel0Table(MemTable* mem, VersionEdit* edit,
     }
     edit->AddFile(level, meta.number, meta.file_size, meta.smallest,
                   meta.largest);
+    Log(options_.info_log, "Picking level: %d\n", level);
+
   }
 
   CompactionStats stats;
   stats.micros = env_->NowMicros() - start_micros;
   stats.bytes_written = meta.file_size;
   stats_[level].Add(stats);
+  Log(options_.info_log, "Level-0 has been written");
   return s;
 }
 
@@ -924,8 +929,11 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
       const uint64_t imm_start = env_->NowMicros();
       mutex_.Lock();
       if (imm_ != nullptr) {
+          Log(options_.info_log, "Prioritizing immutable compaction\n");
+
         CompactMemTable();
         // Wake up MakeRoomForWrite() if necessary.
+        Log(options_.info_log, "Memtable compacted, current number of l0 files: %d\n", versions_->NumLevelFiles(0));
         background_work_finished_signal_.SignalAll();
       }
       mutex_.Unlock();
@@ -937,6 +945,8 @@ Status DBImpl::DoCompactionWork(CompactionState* compact) {
         compact->builder != nullptr) {
       status = FinishCompactionOutputFile(compact, input);
       if (!status.ok()) {
+                Log(options_.info_log, "status not ok, breaking\n");
+
         break;
       }
     }
@@ -1214,6 +1224,7 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* updates) {
 
   // May temporarily unlock and wait.
   Status status = MakeRoomForWrite(updates == nullptr);
+
   uint64_t last_sequence = versions_->LastSequence();
   Writer* last_writer = &w;
   if (status.ok() && updates != nullptr) {  // nullptr batch is for compactions
@@ -1340,6 +1351,7 @@ Status DBImpl::MakeRoomForWrite(bool force) {
       // individual write by 1ms to reduce latency variance.  Also,
       // this delay hands over some CPU to the compaction thread in
       // case it is sharing the same core as the writer.
+      Log(options_.info_log, "Triggering slowdown of writes\n");
       mutex_.Unlock();
       env_->SleepForMicroseconds(1000);
       allow_delay = false;  // Do not delay a single write more than once
@@ -1359,6 +1371,7 @@ Status DBImpl::MakeRoomForWrite(bool force) {
       background_work_finished_signal_.Wait();
     } else {
       // Attempt to switch to a new memtable and trigger compaction of old
+      Log(options_.info_log, "Current memtable full, switching...\n");
       assert(versions_->PrevLogNumber() == 0);
       uint64_t new_log_number = versions_->NewFileNumber();
       WritableFile* lfile = nullptr;
@@ -1379,6 +1392,8 @@ Status DBImpl::MakeRoomForWrite(bool force) {
       mem_->Ref();
       force = false;  // Do not force another compaction if have room
       MaybeScheduleCompaction();
+      Log(options_.info_log, "New memtable created\n");
+
     }
   }
   return s;
