@@ -71,6 +71,9 @@ class DBImpl : public DB {
   // bytes.
   void RecordReadSample(Slice key);
 
+  // Are we waiting for some background work to finish
+  bool WaitingForBackgroundWork();
+
  private:
   friend class DB;
   struct CompactionState;
@@ -174,6 +177,7 @@ class DBImpl : public DB {
   port::Mutex mutex_;
   std::atomic<bool> shutting_down_;
   port::CondVar background_work_finished_signal_ GUARDED_BY(mutex_);
+  std::atomic<bool> background_work_; // Background work currently underway
   MemTable* mem_;
   MemTable* imm_ GUARDED_BY(mutex_);  // Memtable being compacted
   std::atomic<bool> has_imm_;         // So bg thread can detect non-null imm_

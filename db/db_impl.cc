@@ -154,7 +154,9 @@ DBImpl::~DBImpl() {
   mutex_.Lock();
   shutting_down_.store(true, std::memory_order_release);
   while (background_compaction_scheduled_) {
+    // background_work_ = true;
     background_work_finished_signal_.Wait();
+    // background_work_ = false;
   }
   mutex_.Unlock();
 
@@ -626,7 +628,9 @@ void DBImpl::TEST_CompactRange(int level, const Slice* begin,
       manual_compaction_ = &manual;
       MaybeScheduleCompaction();
     } else {  // Running either my compaction or another compaction.
+      // background_work_ = true;
       background_work_finished_signal_.Wait();
+      // background_work_ = false;
     }
   }
   if (manual_compaction_ == &manual) {
@@ -642,7 +646,10 @@ Status DBImpl::TEST_CompactMemTable() {
     // Wait until the compaction completes
     MutexLock l(&mutex_);
     while (imm_ != nullptr && bg_error_.ok()) {
+      // background_work_ = true;
       background_work_finished_signal_.Wait();
+      // background_work_ = false;
+
     }
     if (imm_ != nullptr) {
       s = bg_error_;
@@ -1359,11 +1366,17 @@ Status DBImpl::MakeRoomForWrite(bool force) {
       // We have filled up the current memtable, but the previous
       // one is still being compacted, so we wait.
       Log(options_.info_log, "Current memtable full; waiting...\n");
+
+      background_work_ = true;
       background_work_finished_signal_.Wait();
+      background_work_ = false;
     } else if (versions_->NumLevelFiles(0) >= config::kL0_StopWritesTrigger) {
       // There are too many level-0 files.
       Log(options_.info_log, "Too many L0 files; waiting...\n");
+
+      background_work_ = true;
       background_work_finished_signal_.Wait();
+      background_work_ = false;
     } else {
       // Attempt to switch to a new memtable and trigger compaction of old
       Log(options_.info_log, "Current memtable full, switching...\n");
@@ -1473,6 +1486,14 @@ void DBImpl::GetApproximateSizes(const Range* range, int n, uint64_t* sizes) {
 
   v->Unref();
 }
+
+
+bool DBImpl::WaitingForBackgroundWork(){
+  if(background_work_) return true;
+  return false;
+}
+
+bool DB::WaitingForBackgroundWork(){}
 
 // Default implementations of convenience methods that subclasses of DB
 // can call if they wish
