@@ -148,6 +148,8 @@ class LEVELDB_EXPORT DB {
 
   virtual bool WaitingForBackgroundWork();
 
+  virtual int GetNumL0Files();
+
 };
 
 // Destroy the contents of the specified database.

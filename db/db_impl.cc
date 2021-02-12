@@ -1493,7 +1493,13 @@ bool DBImpl::WaitingForBackgroundWork(){
   return false;
 }
 
+int DBImpl::GetNumL0Files(){
+  return versions_->NumLevelFiles(0);
+}
+
 bool DB::WaitingForBackgroundWork(){}
+
+int DB::GetNumL0Files(){}
 
 // Default implementations of convenience methods that subclasses of DB
 // can call if they wish

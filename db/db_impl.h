@@ -74,6 +74,9 @@ class DBImpl : public DB {
   // Are we waiting for some background work to finish
   bool WaitingForBackgroundWork();
 
+  // Return current number of L0 files
+  int GetNumL0Files();
+
  private:
   friend class DB;
   struct CompactionState;
