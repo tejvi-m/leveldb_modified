@@ -7,6 +7,7 @@
 #include <atomic>
 #include <cstdio>
 #include <cstdlib>
+#include <fstream>
 
 #include "leveldb/cache.h"
 #include "leveldb/comparator.h"
@@ -238,9 +239,15 @@ class Stats {
   double last_op_finish_;
   Histogram hist_;
   std::string message_;
-
+  std::ofstream latency_file_;
  public:
-  Stats() { Start(); }
+  Stats() { Start(); 
+  latency_file_.open("latency.csv", std::ios::app);
+  }
+  
+  ~Stats(){
+   latency_file_.close();
+  }
 
   void Start() {
     next_report_ = 100;
@@ -273,8 +280,9 @@ class Stats {
 
   void FinishedSingleOp() {
     if (FLAGS_histogram) {
-      double now = g_env->NowMicros();
+      auto now = g_env->NowMicros();
       double micros = now - last_op_finish_;
+      latency_file_ << now << "," << micros << std::endl;
       hist_.Add(micros);
       if (micros > 20000) {
         std::fprintf(stderr, "long op: %.1f micros%30s\r", micros, "");
