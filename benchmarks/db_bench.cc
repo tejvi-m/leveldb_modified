@@ -728,40 +728,41 @@ class Benchmark {
   void WriteRandom(ThreadState* thread) { DoWrite(thread, false); }
 
   void DoWrite(ThreadState* thread, bool seq) {
-    if (num_ != FLAGS_num) {
-      char msg[100];
-      std::snprintf(msg, sizeof(msg), "(%d ops)", num_);
-      thread->stats.AddMessage(msg);
-    }
+    // if (num_ != FLAGS_num) {
+    //   char msg[100];
+    //   std::snprintf(msg, sizeof(msg), "(%d ops)", num_);
+    //   thread->stats.AddMessage(msg);
+    // }
 
-    RandomGenerator gen;
-    WriteBatch batch;
-    Status s;
-    int64_t bytes = 0;
-    for (int i = 0; i < num_; i += entries_per_batch_) {
-      batch.Clear();
-      for (int j = 0; j < entries_per_batch_; j++) {
-        const int k = seq ? i + j : (thread->rand.Next() % FLAGS_num);
-        char key[100];
-        std::snprintf(key, sizeof(key), "%016d", k);
-        batch.Put(key, gen.Generate(value_size_));
-        bytes += value_size_ + strlen(key);
-        thread->stats.FinishedSingleOp();
-      }
-      const int k = seq ? i : (thread->rand.Next() % FLAGS_num);
-      char key[100];
-      std::snprintf(key, sizeof(key), "%016d", k);
-      // s = db_->Write(write_options_, &batch);
-      // newdb_->Put(key, "sample_value");
-      std::fprintf(stderr, "sample put");
-      std::exit(1);
-      // if (!s.ok()) {
-      //   std::fprintf(stderr, "put error: %s\n", s.ToString().c_str());
-      //   std::exit(1);
-      // }
-    }
+    // RandomGenerator gen;
+    // WriteBatch batch;
+    // Status s;
+    // int64_t bytes = 0;
+    // for (int i = 0; i < num_; i += entries_per_batch_) {
+    //   batch.Clear();
+    //   for (int j = 0; j < entries_per_batch_; j++) {
+    //     const int k = seq ? i + j : (thread->rand.Next() % FLAGS_num);
+    //     char key[100];
+    //     std::snprintf(key, sizeof(key), "%016d", k);
+    //     batch.Put(key, gen.Generate(value_size_));
+    //     bytes += value_size_ + strlen(key);
+    //     thread->stats.FinishedSingleOp();
+    //   }
+    //   const int k = seq ? i : (thread->rand.Next() % FLAGS_num);
+    //   char key[100];
+    //   std::snprintf(key, sizeof(key), "%016d", k);
+    //   // s = db_->Write(write_options_, &batch);
+      
+    //   // if (!s.ok()) {
+    //   //   std::fprintf(stderr, "put error: %s\n", s.ToString().c_str());
+    //   //   std::exit(1);
+    //   // }
+    // }
     
-    thread->stats.AddBytes(bytes);
+    // thread->stats.AddBytes(bytes);
+    for(int i = 0; i<FLAGS_num; i++) {
+      newdb_->Put("sample_key", "sample_value");
+    }
   }
 
   void ReadSequential(ThreadState* thread) {
