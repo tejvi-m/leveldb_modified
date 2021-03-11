@@ -124,6 +124,8 @@ target_sources(leveldb
   PRIVATE
     "${PROJECT_BINARY_DIR}/${LEVELDB_PORT_CONFIG_DIR}/port_config.h"
     "db/builder.cc"
+    "db/bifurcated_leveldb.cc"
+    "db/bifurcated_leveldb_helper.h"
     "db/builder.h"
     "db/c.cc"
     "db/db_impl.cc"
@@ -196,6 +198,7 @@ target_sources(leveldb
   # Only CMake 3.3+ supports PUBLIC sources in targets exported by "install".
   $<$<VERSION_GREATER:CMAKE_VERSION,3.2>:PUBLIC>
     "${LEVELDB_PUBLIC_INCLUDE_DIR}/c.h"
+    "${LEVELDB_PUBLIC_INCLUDE_DIR}/bifurcated_leveldb_helper.h"
     "${LEVELDB_PUBLIC_INCLUDE_DIR}/cache.h"
     "${LEVELDB_PUBLIC_INCLUDE_DIR}/comparator.h"
     "${LEVELDB_PUBLIC_INCLUDE_DIR}/db.h"
@@ -452,6 +455,7 @@ if(LEVELDB_INSTALL)
   install(
     FILES
       "${LEVELDB_PUBLIC_INCLUDE_DIR}/c.h"
+      "${LEVELDB_PUBLIC_INCLUDE_DIR}/bifurcated_leveldb_helper.h"
       "${LEVELDB_PUBLIC_INCLUDE_DIR}/cache.h"
       "${LEVELDB_PUBLIC_INCLUDE_DIR}/comparator.h"
       "${LEVELDB_PUBLIC_INCLUDE_DIR}/db.h"

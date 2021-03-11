@@ -329,7 +329,7 @@ class Benchmark {
   WriteOptions write_options_;
   int reads_;
   int heap_counter_;
-  BifurcatedLevelDB b(5);
+  leveldb::BifurcatedLevelDB* newdb_;
 
   void PrintHeader() {
     const int kKeySize = 16;
@@ -415,6 +415,7 @@ class Benchmark {
         filter_policy_(FLAGS_bloom_bits >= 0
                            ? NewBloomFilterPolicy(FLAGS_bloom_bits)
                            : nullptr),
+        newdb_(nullptr),
         db_(nullptr),
         num_(FLAGS_num),
         value_size_(FLAGS_value_size),
@@ -437,6 +438,7 @@ class Benchmark {
     delete db_;
     delete cache_;
     delete filter_policy_;
+    delete newdb_;
   }
 
   void Run() {
@@ -746,12 +748,19 @@ class Benchmark {
         bytes += value_size_ + strlen(key);
         thread->stats.FinishedSingleOp();
       }
-      s = db_->Write(write_options_, &batch);
-      if (!s.ok()) {
-        std::fprintf(stderr, "put error: %s\n", s.ToString().c_str());
-        std::exit(1);
-      }
+      const int k = seq ? i : (thread->rand.Next() % FLAGS_num);
+      char key[100];
+      std::snprintf(key, sizeof(key), "%016d", k);
+      // s = db_->Write(write_options_, &batch);
+      newdb_->Put(key, "sample_value");
+      std::fprintf(stderr, "sample put");
+      std::exit(1);
+      // if (!s.ok()) {
+      //   std::fprintf(stderr, "put error: %s\n", s.ToString().c_str());
+      //   std::exit(1);
+      // }
     }
+    
     thread->stats.AddBytes(bytes);
   }
 
