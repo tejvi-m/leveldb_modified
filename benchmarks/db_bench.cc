@@ -752,7 +752,7 @@ class Benchmark {
       char key[100];
       std::snprintf(key, sizeof(key), "%016d", k);
       // s = db_->Write(write_options_, &batch);
-      newdb_->Put(key, "sample_value");
+      // newdb_->Put(key, "sample_value");
       std::fprintf(stderr, "sample put");
       std::exit(1);
       // if (!s.ok()) {
