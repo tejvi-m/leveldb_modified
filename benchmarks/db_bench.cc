@@ -20,6 +20,7 @@
 #include "util/mutexlock.h"
 #include "util/random.h"
 #include "util/testutil.h"
+#include "leveldb/bifurcated_leveldb_helper.h"
 
 // Comma-separated list of operations to run in the specified order
 //   Actual benchmarks:
@@ -328,6 +329,7 @@ class Benchmark {
   WriteOptions write_options_;
   int reads_;
   int heap_counter_;
+  BifurcatedLevelDB b(5);
 
   void PrintHeader() {
     const int kKeySize = 16;
