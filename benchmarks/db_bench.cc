@@ -20,6 +20,7 @@
 #include "util/mutexlock.h"
 #include "util/random.h"
 #include "util/testutil.h"
+#include "leveldb/bifurcated_leveldb_helper.h"
 
 // Comma-separated list of operations to run in the specified order
 //   Actual benchmarks:
@@ -328,6 +329,7 @@ class Benchmark {
   WriteOptions write_options_;
   int reads_;
   int heap_counter_;
+  leveldb::BifurcatedLevelDB* newdb_;
 
   void PrintHeader() {
     const int kKeySize = 16;
@@ -413,6 +415,7 @@ class Benchmark {
         filter_policy_(FLAGS_bloom_bits >= 0
                            ? NewBloomFilterPolicy(FLAGS_bloom_bits)
                            : nullptr),
+        newdb_(nullptr),
         db_(nullptr),
         num_(FLAGS_num),
         value_size_(FLAGS_value_size),
@@ -435,6 +438,7 @@ class Benchmark {
     delete db_;
     delete cache_;
     delete filter_policy_;
+    delete newdb_;
   }
 
   void Run() {
@@ -724,33 +728,41 @@ class Benchmark {
   void WriteRandom(ThreadState* thread) { DoWrite(thread, false); }
 
   void DoWrite(ThreadState* thread, bool seq) {
-    if (num_ != FLAGS_num) {
-      char msg[100];
-      std::snprintf(msg, sizeof(msg), "(%d ops)", num_);
-      thread->stats.AddMessage(msg);
-    }
+    // if (num_ != FLAGS_num) {
+    //   char msg[100];
+    //   std::snprintf(msg, sizeof(msg), "(%d ops)", num_);
+    //   thread->stats.AddMessage(msg);
+    // }
 
-    RandomGenerator gen;
-    WriteBatch batch;
-    Status s;
-    int64_t bytes = 0;
-    for (int i = 0; i < num_; i += entries_per_batch_) {
-      batch.Clear();
-      for (int j = 0; j < entries_per_batch_; j++) {
-        const int k = seq ? i + j : (thread->rand.Next() % FLAGS_num);
-        char key[100];
-        std::snprintf(key, sizeof(key), "%016d", k);
-        batch.Put(key, gen.Generate(value_size_));
-        bytes += value_size_ + strlen(key);
-        thread->stats.FinishedSingleOp();
-      }
-      s = db_->Write(write_options_, &batch);
-      if (!s.ok()) {
-        std::fprintf(stderr, "put error: %s\n", s.ToString().c_str());
-        std::exit(1);
-      }
+    // RandomGenerator gen;
+    // WriteBatch batch;
+    // Status s;
+    // int64_t bytes = 0;
+    // for (int i = 0; i < num_; i += entries_per_batch_) {
+    //   batch.Clear();
+    //   for (int j = 0; j < entries_per_batch_; j++) {
+    //     const int k = seq ? i + j : (thread->rand.Next() % FLAGS_num);
+    //     char key[100];
+    //     std::snprintf(key, sizeof(key), "%016d", k);
+    //     batch.Put(key, gen.Generate(value_size_));
+    //     bytes += value_size_ + strlen(key);
+    //     thread->stats.FinishedSingleOp();
+    //   }
+    //   const int k = seq ? i : (thread->rand.Next() % FLAGS_num);
+    //   char key[100];
+    //   std::snprintf(key, sizeof(key), "%016d", k);
+    //   // s = db_->Write(write_options_, &batch);
+      
+    //   // if (!s.ok()) {
+    //   //   std::fprintf(stderr, "put error: %s\n", s.ToString().c_str());
+    //   //   std::exit(1);
+    //   // }
+    // }
+    
+    // thread->stats.AddBytes(bytes);
+    for(int i = 0; i<FLAGS_num; i++) {
+      newdb_->Put("sample_key", "sample_value");
     }
-    thread->stats.AddBytes(bytes);
   }
 
   void ReadSequential(ThreadState* thread) {
